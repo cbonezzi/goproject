@@ -1,17 +1,46 @@
+//this imports main
 package main
 
 import (
+	"cesarbon.net/goproject/cmd/config"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
 
+//Home function from handlers
+func Home(app *config.Application) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request){
+		if r.URL.Path != "/"{
+			http.NotFound(w, r)
+			return
+		}
+
+		files := []string{
+			"./ui/html/home.page.tmpl",
+			"./ui/html/base.layout.tmpl",
+			"./ui/html/footer.partial.tmpl",
+		}
+
+		ts, err := template.ParseFiles(files...)
+		if err != nil{
+			app.ErrorLog.Println(err.Error())
+			http.Error(w, "Internal Server Error_1", 500)
+			return
+		}
+		
+		err = ts.Execute(w, nil)
+		if err != nil{
+			app.ErrorLog.Println(err.Error())
+			http.Error(w, "Internal Server Error_2", 500)
+		}
+	}
+}
+
 //define a home handle function which writes a byte slice containing
 //"hello from snippetbox" as the response.
-
-func home(w http.ResponseWriter, r *http.Request){
+func (app *application) home(w http.ResponseWriter, r *http.Request){
 
 	if r.URL.Path != "/"{
 		http.NotFound(w, r)
@@ -26,19 +55,19 @@ func home(w http.ResponseWriter, r *http.Request){
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil{
-		log.Println(err.Error())
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error_1", 500)
 		return
 	}
 
 	err = ts.Execute(w, nil)
 	if err != nil{
-		log.Println(err.Error())
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error_2", 500)
 	}
 }
 
-func showSnippet(w http.ResponseWriter, r *http.Request){
+func (app *application) showSnippet(w http.ResponseWriter, r *http.Request){
 	// this helps extract the value of the id parameter from the query string
 	// and try to convert it to an integer using the strconv.Atoi()
 	// function. If it can't be converted to an integer, or the value is less than 1,
@@ -52,7 +81,7 @@ func showSnippet(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-func createSnippet(w http.ResponseWriter, r *http.Request){
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request){
 	if r.Method != "POST"{
 		//header map manipulation occurs with the below --w.Header().Set()
 		//w.Header().Add("Cache-Control", "public")

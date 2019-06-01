@@ -1,3 +1,3 @@
-module cesarbon.net/snippetbox
+module cesarbon.net/goproject
 
 go 1.12
