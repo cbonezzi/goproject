@@ -51,7 +51,7 @@ func main(){
 	//then register the home function as the handler for the "/" URL pattern.
 	//DI: switching home -> app.home since method now support DI (basic)
 	mux := http.NewServeMux()
-	mux.Handle("/", Home(app1))
+	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/snippet", app.showSnippet)
 	mux.HandleFunc("/snippet/create", app.createSnippet)
 
