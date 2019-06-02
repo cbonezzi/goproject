@@ -2,10 +2,13 @@ package main
 
 import (	
 	"cesarbon.net/goproject/cmd/config"
+	"database/sql"
 	"flag"
 	"net/http"
 	"os"
 	"log"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //Cfg struct
@@ -13,6 +16,7 @@ type Cfg struct{
 	Addr string
 	StaticDir string
 	IsProd bool
+	Dsn string
 }
 
 //struct for dependency injection
@@ -27,6 +31,7 @@ func main(){
 	flag.StringVar(&cfg.Addr, "addr", ":4000", "HTTP network address1")
 	flag.StringVar(&cfg.StaticDir, "static-dir", "./ui/static","Path to static assests")
 	flag.BoolVar(&cfg.IsProd, "isProd", true, "flag for production enable")
+	flag.StringVar(&cfg.Dsn, "dsn", "web:P@ssw0rd@/snippetbox?parseTime=true", "MySQL data source name")
 
 	flag.Parse()
 
@@ -34,32 +39,25 @@ func main(){
 	//and abstract it out, to use it globally?
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-	
+
 	//di but basic
 	app := &application{
 		errorLog: errorLog,
 		infoLog: infoLog,
 	}
 
+	db, err := openDB(cfg.Dsn)
+	if err != nil {
+		app.errorLog.Fatal(err)
+	}
+	defer db.Close()
+
+
 	//init var with struct reqs for di.
 	app1 := &config.Application{
 		InfoLog: log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		ErrorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 	}
-
-	//use the http.newservemux() function to initialize a new servemux,
-	//then register the home function as the handler for the "/" URL pattern.
-	//DI: switching home -> app.home since method now support DI (basic)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
-
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-
-	//static url for handles
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
 	
 	// Initialize a new http.Server struct. We set the Addr and Handler fields so
 	// that the server uses the same network address and routes as before, and set
@@ -68,12 +66,25 @@ func main(){
 	srv := &http.Server{
 		Addr: cfg.Addr,
 		ErrorLog: app1.ErrorLog,
-		Handler: mux,
+		Handler: app.routes(),
 	}
 
 	app1.InfoLog.Printf("Starting server on %s", cfg.Addr)
 	app1.InfoLog.Println("static directory location", cfg.StaticDir)
 	app1.InfoLog.Println("Is Production", cfg.IsProd)
-	err := srv.ListenAndServe()
-	app1.ErrorLog.Fatal(err)
+	err1 := srv.ListenAndServe()
+	app1.ErrorLog.Fatal(err1)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	
+	db, err := sql.Open("mysql", dsn)
+
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
