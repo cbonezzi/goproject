@@ -4,7 +4,7 @@ package main
 import (
 	"cesarbon.net/goproject/cmd/config"
 	"fmt"
-	"html/template"
+	//"html/template"
 	"net/http"
 	"strconv"
 )
@@ -17,24 +17,24 @@ func Home(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		files := []string{
-			"./ui/html/home.page.tmpl",
-			"./ui/html/base.layout.tmpl",
-			"./ui/html/footer.partial.tmpl",
-		}
+		// files := []string{
+		// 	"./ui/html/home.page.tmpl",
+		// 	"./ui/html/base.layout.tmpl",
+		// 	"./ui/html/footer.partial.tmpl",
+		// }
 
-		ts, err := template.ParseFiles(files...)
-		if err != nil{
-			app.ErrorLog.Println(err.Error())
-			http.Error(w, "Internal Server Error_1", 500)
-			return
-		}
+		// ts, err := template.ParseFiles(files...)
+		// if err != nil{
+		// 	app.ErrorLog.Println(err.Error())
+		// 	http.Error(w, "Internal Server Error_1", 500)
+		// 	return
+		// }
 		
-		err = ts.Execute(w, nil)
-		if err != nil{
-			app.ErrorLog.Println(err.Error())
-			http.Error(w, "Internal Server Error_2", 500)
-		}
+		// err = ts.Execute(w, nil)
+		// if err != nil{
+		// 	app.ErrorLog.Println(err.Error())
+		// 	http.Error(w, "Internal Server Error_2", 500)
+		// }
 	}
 }
 
@@ -47,24 +47,33 @@ func (app *application) home(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
+	s, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, err)
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil{
-		app.serverError(w, err)
-		//http.Error(w, "Internal Server Error_1", 500)
-		return
+	for _, snippet := range s {
+		fmt.Fprintf(w, "%v", snippet)
 	}
 
-	err = ts.Execute(w, nil)
-	if err != nil{
-		app.serverError(w, err)
-		//http.Error(w, "Internal Server Error_2", 500)
-	}
+	// files := []string{
+	// 	"./ui/html/home.page.tmpl",
+	// 	"./ui/html/base.layout.tmpl",
+	// 	"./ui/html/footer.partial.tmpl",
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil{
+	// 	app.serverError(w, err)
+	// 	//http.Error(w, "Internal Server Error_1", 500)
+	// 	return
+	// }
+
+	// err = ts.Execute(w, nil)
+	// if err != nil{
+	// 	app.serverError(w, err)
+	// 	//http.Error(w, "Internal Server Error_2", 500)
+	// }
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request){
@@ -78,7 +87,17 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request){
 		app.notFound(w)
 		return
 	}
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+
+	s, err := app.snippets.Get(id)
+
+	if err != nil {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+	}
+
+	fmt.Fprintf(w, "%v", s)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request){
@@ -94,5 +113,15 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	w.Write([]byte("Create a new snippet..."))
+	title := "o snail"
+	content := "blah\nClimb Mount Fuiji,\nBut slowly..."
+	expires := "7"
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 }

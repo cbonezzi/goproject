@@ -8,6 +8,8 @@ import (
 	"os"
 	"log"
 
+	"cesarbon.net/goproject/pkg/models/mysql"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -23,6 +25,7 @@ type Cfg struct{
 type application struct {
 	errorLog *log.Logger
 	infoLog *log.Logger
+	snippets *mysql.SnippetModel
 }
 
 func main(){
@@ -40,18 +43,22 @@ func main(){
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	//db connection pool creation.
+	db, err := openDB(cfg.Dsn)
+
 	//di but basic
+	//initialize a mysql.SnippetModel instance and add it to the application
 	app := &application{
 		errorLog: errorLog,
 		infoLog: infoLog,
+		snippets: &mysql.SnippetModel{DB: db},
 	}
-
-	db, err := openDB(cfg.Dsn)
+	
 	if err != nil {
 		app.errorLog.Fatal(err)
 	}
+	//defer a call to db.Close() so that the connection pool is closed before the main() function exits.
 	defer db.Close()
-
 
 	//init var with struct reqs for di.
 	app1 := &config.Application{
