@@ -7,6 +7,9 @@ import (
 	//"html/template"
 	"net/http"
 	"strconv"
+	"encoding/json"
+	"io/ioutil"	
+	"cesarbon.net/goproject/pkg/models"
 )
 
 //Home function from handlers
@@ -101,6 +104,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request){
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request){
+	
 	if r.Method != "POST"{
 		//header map manipulation occurs with the below --w.Header().Set()
 		//w.Header().Add("Cache-Control", "public")
@@ -113,11 +117,26 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	title := "o snail"
-	content := "blah\nClimb Mount Fuiji,\nBut slowly..."
-	expires := "7"
+	//creates an instance of the snip object model
+	sniptemp := &models.Snip{}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	//reads all bytes from request body and stores it into a slice
+	jsn, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	//unmarshal the jsn slice into the snip object model 'sniptemp'
+	errUnmarshal := json.Unmarshal(jsn, sniptemp)
+	if errUnmarshal != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	//use sniptemp data from prop...
+	id, err := app.snippets.Insert(*sniptemp)
 	if err != nil {
 		app.serverError(w, err)
 		return
