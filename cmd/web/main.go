@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -24,9 +25,10 @@ type Cfg struct {
 
 //struct for dependency injection
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -44,15 +46,22 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	//init template cache
+	templateCache, err := newTemplateCache("F:/snippetbox_git/goproject/ui/html/")
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	//db connection pool creation.
 	db, err := openDB(cfg.Dsn)
 
 	//di but basic
 	//initialize a mysql.SnippetModel instance and add it to the application
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &mysql.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	if err != nil {

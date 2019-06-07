@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -57,26 +56,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snippets: s}
-
-	files := []string{
-		"F:/snippetbox_git/goproject/ui/html/home.page.tmpl",
-		"F:/snippetbox_git/goproject/ui/html/base.layout.tmpl",
-		"F:/snippetbox_git/goproject/ui/html/footer.partial.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		//http.Error(w, "Internal Server Error_1", 500)
-		return
-	}
-
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-		//http.Error(w, "Internal Server Error_2", 500)
-	}
+	app.render(w, r, "home.page.tmpl", &templateData{
+		Snippets: s,
+	})
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -100,28 +82,10 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	//create an instance of a templateData struct holding the snippet data.
-	data := &templateData{Snippet: s}
-
-	files := []string{
-		"F:/snippetbox_git/goproject/ui/html/show.page.tmpl",
-		"F:/snippetbox_git/goproject/ui/html/base.layout.tmpl",
-		"F:/snippetbox_git/goproject/ui/html/footer.partial.tmpl",
-	}
-
-	//parse the template files
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
-
-	fmt.Fprintf(w, "%v", s)
+	// Use the new render helper.
+	app.render(w, r, "show.page.tmpl", &templateData{
+		Snippet: s,
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
