@@ -8,41 +8,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"cesarbon.net/goproject/cmd/config"
 	"cesarbon.net/goproject/pkg/models"
 )
 
-//Home function from handlers
-func Home(app *config.Application) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-
-		// files := []string{
-		// 	"./ui/html/home.page.tmpl",
-		// 	"./ui/html/base.layout.tmpl",
-		// 	"./ui/html/footer.partial.tmpl",
-		// }
-
-		// ts, err := template.ParseFiles(files...)
-		// if err != nil{
-		// 	app.ErrorLog.Println(err.Error())
-		// 	http.Error(w, "Internal Server Error_1", 500)
-		// 	return
-		// }
-
-		// err = ts.Execute(w, nil)
-		// if err != nil{
-		// 	app.ErrorLog.Println(err.Error())
-		// 	http.Error(w, "Internal Server Error_2", 500)
-		// }
-	}
-}
-
-//define a home handle function which writes a byte slice containing
-//"hello from snippetbox" as the response.
+//define a home handle function
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/" {
