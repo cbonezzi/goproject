@@ -35,7 +35,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// and try to convert it to an integer using the strconv.Atoi()
 	// function. If it can't be converted to an integer, or the value is less than 1,
 	// we return a 404 page not found response.
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -55,6 +55,10 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "show.page.tmpl", &templateData{
 		Snippet: s,
 	})
+}
+
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet..."))
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -96,5 +100,5 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
