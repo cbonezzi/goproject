@@ -58,10 +58,32 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create a new snippet..."))
+	app.render(w, r, "create.page.tmpl", nil)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+
+	sniptemp := &models.Snip{}
+
+	sniptemp.Title = r.PostForm.Get("title")
+	sniptemp.Content = r.PostForm.Get("content")
+	sniptemp.Expires = r.PostForm.Get("expires")
+
+	id, err := app.snippets.Insert(*sniptemp)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) createSnippetJSON(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != "POST" {
 		//header map manipulation occurs with the below --w.Header().Set()
