@@ -7,9 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
 
+	"cesarbon.net/goproject/pkg/forms"
 	"cesarbon.net/goproject/pkg/models"
 )
 
@@ -60,7 +59,9 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "create.page.tmpl", nil)
+	app.render(w, r, "create.page.tmpl", &templateData {
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -68,37 +69,55 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
 	}
 
+	form := forms.New(r.PostForm)
+
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermittedValues("expires", "365", "7", "1")
+
+	if !form.Valid() {
+		app.render(w, r, "create.page.tmpl", &templateData{Form: form})
+		return
+	}	
+
+	//now we can create the snippet model, since we know that input is valid.
 	sniptemp := &models.Snip{}
 
 	sniptemp.Title = r.PostForm.Get("title")
 	sniptemp.Content = r.PostForm.Get("content")
 	sniptemp.Expires = r.PostForm.Get("expires")
+	//errors := make(map[string]string)
 
-	errors := make(map[string]string)
 
-	if strings.TrimSpace(sniptemp.Title) == "" {
-		errors["title"] = "this field cannot be blank"
-	} else if utf8.RuneCountInString(sniptemp.Title) > 100 {
-		errors["title"] = "This field is too long (maximum is 100 characters)"
-	}
+	// this logic should be set in its own class
+	// and be called with an object e.g snippet.validate()
+	// if strings.TrimSpace(sniptemp.Title) == "" {
+	// 	errors["title"] = "this field cannot be blank"
+	// } else if utf8.RuneCountInString(sniptemp.Title) > 100 {
+	// 	errors["title"] = "This field is too long (maximum is 100 characters)"
+	// }
 
-	if strings.TrimSpace(sniptemp.Content) == "" {
-		errors["content"] = "this field cannot be blank"
-	}
+	// if strings.TrimSpace(sniptemp.Content) == "" {
+	// 	errors["content"] = "this field cannot be blank"
+	// }
 
-	if strings.TrimSpace(sniptemp.Expires) == "" {
-		errors["expires"] = "this field cannot be blank"
-	} else if sniptemp.Expires != "365" && sniptemp.Expires != "7" && sniptemp.Expires != "1" {
-		errors["expires"] = "This field is invalid"
-	}
+	// if strings.TrimSpace(sniptemp.Expires) == "" {
+	// 	errors["expires"] = "this field cannot be blank"
+	// } else if sniptemp.Expires != "365" && sniptemp.Expires != "7" && sniptemp.Expires != "1" {
+	// 	errors["expires"] = "This field is invalid"
+	// }
 
-	if len(errors) > 0 {
-		fmt.Fprint(w, errors)
-		return
-	}
+	// if len(errors) > 0 {
+	// 	app.render(w, r, "create.page.tmpl", &templateData{
+	// 		Form: forms.New(nil),
+	// 	})
+	// 	return
+	// }
 
+	// here we are sending the form's data to data layer for snippet object.
 	id, err := app.snippets.Insert(*sniptemp)
 	if err != nil {
 		app.serverError(w, err)

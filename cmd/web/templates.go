@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"cesarbon.net/goproject/pkg/forms"
 	"cesarbon.net/goproject/pkg/models"
 )
 
@@ -12,6 +13,7 @@ import (
 // any dynamic data that we want to pass to our HTML templates.
 type templateData struct {
 	CurrentYear int
+	Form		*forms.Form
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
 }
