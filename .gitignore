@@ -1,2 +1,4 @@
 cmd/web/debug
 web.exe
+tls/cert.pem
+tls/key.pem

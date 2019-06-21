@@ -102,7 +102,11 @@ func main() {
 	app1.InfoLog.Printf("Starting server on %s", cfg.Addr)
 	app1.InfoLog.Println("static directory location", cfg.StaticDir)
 	app1.InfoLog.Println("Is Production", cfg.IsProd)
-	err1 := srv.ListenAndServe()
+	
+	// Use the ListenAndServeTLS() method to start the HTTPS server. We
+	// pass in the paths to the TLS certificate and corresponding private key as
+	// the two parameters.
+	err1 := srv.ListenAndServeTLS("F:/snippetbox_git/goproject/tls/cert.pem", "F:/snippetbox_git/goproject/tls/key.pem")
 	app1.ErrorLog.Fatal(err1)
 }
 
