@@ -7,12 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"cesarbon.net/goproject/cmd/config"
-
 	"cesarbon.net/goproject/pkg/models/mysql"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
 )
 
 //Cfg struct
@@ -27,6 +27,7 @@ type Cfg struct {
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
+	session		  *sessions.Session
 	snippets      *mysql.SnippetModel
 	templateCache map[string]*template.Template
 }
@@ -38,6 +39,11 @@ func main() {
 	flag.StringVar(&cfg.StaticDir, "static-dir", "./ui/static", "Path to static assests")
 	flag.BoolVar(&cfg.IsProd, "isProd", true, "flag for production enable")
 	flag.StringVar(&cfg.Dsn, "dsn", "web:P@ssw0rd@/snippetbox?parseTime=true", "MySQL data source name")
+	
+	// Define a new command-line flag for the session secret (a random key which
+	// will be used to encrypt and authenticate session cookies). It should be 32
+	// bytes long.
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 
 	flag.Parse()
 
@@ -52,6 +58,12 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Use the sessions.New() function to initialize a new session manager,
+	// passing in the secret key as the parameter. Then we configure it so
+	// sessions always expires after 12 hours.
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	//db connection pool creation.
 	db, err := openDB(cfg.Dsn)
 
@@ -60,6 +72,7 @@ func main() {
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
+		session:	   session,
 		snippets:      &mysql.SnippetModel{DB: db},
 		templateCache: templateCache,
 	}

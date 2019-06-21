@@ -15,15 +15,20 @@ func (app *application) routes() http.Handler {
 	// which will be used for every request our application receives.
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
+	// Create a new middleware chain containing the middleware specific to
+	// our dynamic application routes. For now, this chain will only contain
+	// the session middleware but we'll add more to it later.
+	dynamicMiddleware := alice.New(app.session.Enable)
+
 	//use the http.newservemux() function to initialize a new servemux,
 	//then register the home function as the handler for the "/" URL pattern.
 	//DI: switching home -> app.home since method now support DI (basic)
 	mux := pat.New()
 
-	mux.Get("/", http.HandlerFunc(app.home))
-	mux.Get("/snippet/create", http.HandlerFunc(app.createSnippetForm))
-	mux.Post("/snippet/create", http.HandlerFunc(app.createSnippet))
-	mux.Get("/snippet/:id", http.HandlerFunc(app.showSnippet))
+	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
+	mux.Get("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippetForm))
+	mux.Post("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippet))
+	mux.Get("/snippet/:id", dynamicMiddleware.ThenFunc(app.showSnippet))
 
 	fileServer := http.FileServer(http.Dir("F:/snippetbox_git/goproject/ui/static/"))
 
