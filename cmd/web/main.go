@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -89,14 +90,30 @@ func main() {
 		ErrorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 	}
 
+	//with this block of code we are telling Go that we should use Go's favored
+	//cipher suites by setting PreferServerCipherSuites to true
+	//another setting we are manulpulating here is the CurvePreference, this allow
+	//to specify the elliptic curves preferred during TLS handshake.
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:		  []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	// Initialize a new http.Server struct. We set the Addr and Handler fields so
 	// that the server uses the same network address and routes as before, and set
 	// the ErrorLog field so that the server now uses the custom errorLog logger in
 	// the event of any problems.
 	srv := &http.Server{
 		Addr:     cfg.Addr,
+		//limit the max header length to 0.5MB
+		MaxHeaderBytes: 524288
 		ErrorLog: app1.ErrorLog,
 		Handler:  app.routes(),
+		TLSConfig: tlsConfig,
+		//adding idle, read, write timeouts to the server.
+		IdleTimeout: time.Minute,
+		ReadTimeout: 5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	app1.InfoLog.Printf("Starting server on %s", cfg.Addr)
