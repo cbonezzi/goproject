@@ -106,7 +106,7 @@ func main() {
 	srv := &http.Server{
 		Addr:     cfg.Addr,
 		//limit the max header length to 0.5MB
-		MaxHeaderBytes: 524288
+		MaxHeaderBytes: 524288,
 		ErrorLog: app1.ErrorLog,
 		Handler:  app.routes(),
 		TLSConfig: tlsConfig,
