@@ -26,11 +26,12 @@ type Cfg struct {
 
 //struct for dependency injection
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	session		  *sessions.Session
-	snippets      *mysql.SnippetModel
-	templateCache map[string]*template.Template
+	errorLog      	*log.Logger
+	infoLog       	*log.Logger
+	session		  	*sessions.Session
+	snippets      	*mysql.SnippetModel
+	templateCache 	map[string]*template.Template
+	users		  	*mysql.UserModel
 }
 
 func main() {
@@ -61,9 +62,9 @@ func main() {
 
 	// Use the sessions.New() function to initialize a new session manager,
 	// passing in the secret key as the parameter. Then we configure it so
-	// sessions always expires after 12 hours.
+	// sessions always expires after 20 minutes.
 	session := sessions.New([]byte(*secret))
-	session.Lifetime = 12 * time.Hour
+	session.Lifetime = 20 * time.Minute
 
 	//db connection pool creation.
 	db, err := openDB(cfg.Dsn)
@@ -71,11 +72,12 @@ func main() {
 	//di but basic
 	//initialize a mysql.SnippetModel instance and add it to the application
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		session:	   session,
-		snippets:      &mysql.SnippetModel{DB: db},
-		templateCache: templateCache,
+		errorLog:      	errorLog,
+		infoLog:       	infoLog,
+		session:	   	session,
+		snippets:      	&mysql.SnippetModel{DB: db},
+		templateCache: 	templateCache,
+		users:			&mysql.UserModel{DB: db},
 	}
 
 	if err != nil {

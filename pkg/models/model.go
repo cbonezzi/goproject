@@ -7,7 +7,11 @@ import (
 )
 
 // ErrNoRecord private variable for model use
-var ErrNoRecord = errors.New("models: no matching record found")
+var (
+	ErrNoRecord = errors.New("models: no matching record found")
+	ErrInvalidCredentials = errors.New("models: invalid credentials")
+	ErrDuplicateEmail = errors.New("models: duplicate email")
+)
 
 //Snippet model entity struct
 type Snippet struct {
@@ -18,7 +22,16 @@ type Snippet struct {
 	Expires	time.Time
 }
 
-// Snip definition dto model 
+type User struct {
+	ID				int
+	Name			string
+	Email			string
+	HashedPassword	[]byte
+	Created			time.Time
+	Active			bool
+}
+
+// Snip definition dto model json option
 type Snip struct {
 	ID		int			`json:"id"`
 	Title	string		`json:"title"`
