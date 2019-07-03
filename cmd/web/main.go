@@ -24,6 +24,10 @@ type Cfg struct {
 	Dsn       string
 }
 
+type contextKey string
+
+var contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 //struct for dependency injection
 type application struct {
 	errorLog      	*log.Logger
