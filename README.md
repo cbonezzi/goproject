@@ -1,4 +1,4 @@
-# goproject - SnippetBox
+# WebApplication - SnippetBox in GoLang
 
 This is a web application using the following technologies.
 
