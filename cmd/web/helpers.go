@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/justinas/nosurf"
 )
 
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
@@ -18,6 +20,8 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 
 	//add the authentication status to the template data
 	td.IsAuthenticated = app.isAuthenticated(r)
+
+	td.CSRFToken = nosurf.Token(r)
 	
 	return td
 }

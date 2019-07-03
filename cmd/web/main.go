@@ -63,8 +63,13 @@ func main() {
 	// Use the sessions.New() function to initialize a new session manager,
 	// passing in the secret key as the parameter. Then we configure it so
 	// sessions always expires after 20 minutes.
+	// secure session
+	// samesite will block the session cookie being redirected by an external link to the application
+	// note: samesite only works on 84% of browser world wide.
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 20 * time.Minute
+	session.Secure = true
+	session.SameSite = http.SameSiteStrictMode
 
 	//db connection pool creation.
 	db, err := openDB(cfg.Dsn)
